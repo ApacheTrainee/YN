@@ -1,5 +1,5 @@
 .idea
 
-#log/logfile_web
-#log/logfile
-#config/config.yaml
+log/logfile_web
+log/logfile
+config/config.yaml
