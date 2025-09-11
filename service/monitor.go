@@ -50,38 +50,30 @@ func equipmentStatusMonitor(device config.Device) {
 
 	// () 设备读取初始化操作
 	// result = [32]  2的次方
-	result, _ := global.ClientList[device.Id].ReadDiscreteInputs(config.Config.ReadStartAddr, config.Config.ReadEndAddr)
-	preResult := result
+	resultInit, _ := global.ClientList[device.Id].ReadDiscreteInputs(config.Config.ReadStartAddr, config.Config.ReadEndAddr)
+	preResult := resultInit
 
 	// 转为二进制，左往右数	bits = [32] = [0 0 0 0 1 0]
 	bits := utils.BytesToBits(preResult)
-	log.Logger.Infof("[Device status Change] DeviceID:%v, result = %v. BytesToBits %v", device.Id, result, bits)
+	log.Logger.Infof("[Device status Change] DeviceID:%v, result = %v. BytesToBits %v", device.Id, resultInit, bits)
 
-	signalValue := int(result[0])
+	signalValue := int(resultInit[0])
 	global.ElevatorStatus[device.Id] = signalValue
 
 	// 循环读取状态，根据是否变化，处理电梯信号
 	for {
 		// 只读：modsim32 for opto22的input status
-		result, err := global.ClientList[device.Id].ReadDiscreteInputs(config.Config.ReadStartAddr, config.Config.ReadEndAddr)
-		if err != nil {
-			log.Logger.Infof("ReadDiscreteInputs err: %v", err)
-			time.Sleep(3 * time.Second)
-
-			for {
-				if err = handler.Connect(); err != nil {
-					log.Logger.Errorf("connection to the elevator failed. err: %v", err)
-					time.Sleep(3 * time.Second)
-					continue
-				}
-				log.Logger.Infof("connection to the elevator successfully")
-
-				client := modbus.NewClient(handler)
-				global.ClientList[device.Id] = client // 使用设备ID作为键
-				break
+		var result []byte
+		if config.Config.RunMode == "test" {
+			result = global.ElevatorCoilSimulation
+		} else {
+			result1, err := global.ClientList[device.Id].ReadDiscreteInputs(config.Config.ReadStartAddr, config.Config.ReadEndAddr)
+			if err != nil {
+				log.Logger.Infof("ReadDiscreteInputs err: %v", err)
+				time.Sleep(3 * time.Second)
+				continue
 			}
-
-			continue
+			result = result1
 		}
 
 		if result[0] != preResult[0] {
@@ -91,7 +83,7 @@ func equipmentStatusMonitor(device config.Device) {
 			signalValue = int(result[0])
 			global.ElevatorStatus[device.Id] = signalValue
 
-			processElevatorSignal(device, signalValue) // 处理电梯信号
+			processElevatorSignal(device) // 处理电梯信号
 		}
 		preResult = result
 

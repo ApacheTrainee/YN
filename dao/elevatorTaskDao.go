@@ -8,18 +8,20 @@ import (
 	"time"
 )
 
-func CreateElevatorTask(elevatorTask model.ElevatorTask) error {
-	global.TaskLock.Lock()
-	defer global.TaskLock.Unlock()
+func AddElevatorTaskPool(elevatorTask model.ElevatorTask) error {
+	global.TaskPoolLock.Lock()
+	defer global.TaskPoolLock.Unlock()
 
 	// 检查是否已存在该电梯的任务
-	if _, exists := global.ElevatorTaskList[elevatorTask.ElevatorID]; exists {
-		return fmt.Errorf("---- GenTask Fail！------, deviceId:%v already existsTask, system Can't genTask", elevatorTask.ElevatorID) // 已存在，不覆盖
+	for _, elevatorTaskObj := range global.ElevatorTaskPool[elevatorTask.ElevatorID] {
+		if elevatorTaskObj.TaskID == elevatorTask.TaskID {
+			return fmt.Errorf("---- GenTask Fail！------, deviceId:%v already existsTask, system Can't genTask", elevatorTask.ElevatorID)
+		}
 	}
 
-	global.ElevatorTaskList[elevatorTask.ElevatorID] = elevatorTask
+	global.ElevatorTaskPool[elevatorTask.ElevatorID] = append(global.ElevatorTaskPool[elevatorTask.ElevatorID], elevatorTask)
 
-	log.Logger.Infof("create ElevatorTaskList: %+v", global.ElevatorTaskList[elevatorTask.ElevatorID])
+	log.Logger.Infof("create ElevatorTaskPool: %+v", global.ElevatorTaskPool[elevatorTask.ElevatorID])
 	return nil
 }
 
@@ -58,10 +60,13 @@ func UpdateElevatorTask(elevatorID string, elevatorTask model.ElevatorTask, isFi
 	if elevatorTask.IsProcessToOtherFloorReq != false {
 		task.IsProcessToOtherFloorReq = elevatorTask.IsProcessToOtherFloorReq
 	}
-	if elevatorTask.StartFloor != "" {
+	if elevatorTask.IsProcessStartFloorCloseDoorReq != false {
+		task.IsProcessStartFloorCloseDoorReq = elevatorTask.IsProcessStartFloorCloseDoorReq
+	}
+	if elevatorTask.StartFloor != 0 {
 		task.StartFloor = elevatorTask.StartFloor
 	}
-	if elevatorTask.TargetFloor != "" {
+	if elevatorTask.TargetFloor != 0 {
 		task.TargetFloor = elevatorTask.TargetFloor
 	}
 	if elevatorTask.TaskStatus != "" {
@@ -69,6 +74,9 @@ func UpdateElevatorTask(elevatorID string, elevatorTask model.ElevatorTask, isFi
 	}
 	if elevatorTask.TaskType != "" {
 		task.TaskType = elevatorTask.TaskType
+	}
+	if elevatorTask.ReqStatus != "" {
+		task.ReqStatus = elevatorTask.ReqStatus
 	}
 	if isFinish == true {
 		task.EndTime = elevatorTask.EndTime

@@ -8,10 +8,14 @@ import (
 
 var (
 	TaskLock         sync.RWMutex
+	TaskPoolLock     sync.RWMutex
+	ElevatorTaskPool = make(map[string][]model.ElevatorTask)
 	ElevatorTaskList = make(map[string]model.ElevatorTask) //各个电梯的任务列表
 
 	ElevatorStatus = make(map[string]int)           // 读取(叫串口)的电梯状态值
 	ClientList     = make(map[string]modbus.Client) // 电梯客户端
+
+	ElevatorCoilSimulation = []byte{16}
 
 	RasterExclusiveAreaChan1 = make(chan bool, 1)
 	RasterExclusiveAreaChan2 = make(chan bool, 1)
@@ -25,21 +29,17 @@ var (
 	ElevatorTaskType_Up   = "Up"
 
 	// 电梯任务状态流转
-	ElevatorTaskStatus_To5F_1            = "To5F"
-	ElevatorTaskStatus_Arrive5F_2        = "Arrive5FFinish"
-	ElevatorTaskStatus_OpenDoorFinish_3  = "OpenDoorFinish"
-	ElevatorTaskStatus_CloseDoor_4       = "CloseDoor"
-	ElevatorTaskStatus_CloseDoorFinish_5 = "CloseDoorFinish"
-	ElevatorTaskStatus_To4F_6            = "To4F"
-	ElevatorTaskStatus_Arrive4F_7        = "Arrive4FFinish"
+	ElevatorTaskStatus_ToStartFloor              = "ToStartFloor"
+	ElevatorTaskStatus_StartFloorArriveFinish    = "StartFloorArriveFinish" // 因为生成任务那里要判断是否在当前楼层，所以多2个引用
+	ElevatorTaskStatus_StartFloorOpenDoorFinish  = "StartFloorOpenDoorFinish"
+	ElevatorTaskStatus_StartFloorCloseDoor       = "StartFloorCloseDoor"
+	ElevatorTaskStatus_StartFloorCloseDoorFinish = "StartFloorCloseDoorFinish"
 
-	ElevatorTaskStatus_To4F_Up_1            = "To4F"
-	ElevatorTaskStatus_Arrive4F_Up_2        = "Arrive4FFinish"
-	ElevatorTaskStatus_OpenDoorFinish_Up_3  = "OpenDoorFinish"
-	ElevatorTaskStatus_CloseDoor_Up_4       = "CloseDoor"
-	ElevatorTaskStatus_CloseDoorFinish_Up_5 = "CloseDoorFinish"
-	ElevatorTaskStatus_To5F_Up_6            = "To5F"
-	ElevatorTaskStatus_Arrive5FFinish_Up_7  = "Arrive5FFinish"
+	ElevatorTaskStatus_ToTargetFloor              = "ToTargetFloor"
+	ElevatorTaskStatus_TargetFloorArriveFinish    = "TargetFloorArriveFinish"
+	ElevatorTaskStatus_TargetFloorOpenDoorFinish  = "TargetFloorOpenDoorFinish"
+	ElevatorTaskStatus_TargetFloorCloseDoor       = "TargetFloorCloseDoor"       // 22、26各多两个判断。共多4个
+	ElevatorTaskStatus_TargetFloorCloseDoorFinish = "TargetFloorCloseDoorFinish" // 多两个仅更新状态的引用
 
 	/*
 		web接收的是这8种信号
@@ -53,6 +53,16 @@ var (
 			E1_InReqTo5F				AGV在电梯内，申请电梯到5楼
 			E1_OutReqCloseDoor5F		AGV在电梯外，AGV送货关门请求
 	*/
+	//ElevatorRcsConfig_E1_OutReqTo5F        = "OutReqTo5F"
+	//ElevatorRcsConfig_E1_InReqCloseDoor5F  = "InReqCloseDoor5F"
+	//ElevatorRcsConfig_E1_InReqTo4F         = "InReqTo4F"
+	//ElevatorRcsConfig_E1_OutReqCloseDoor4F = "OutReqCloseDoor4F"
+	//
+	//ElevatorRcsConfig_E1_OutReqTo4F        = "OutReqTo4F"
+	//ElevatorRcsConfig_E1_InReqCloseDoor4F  = "InReqCloseDoor4F"
+	//ElevatorRcsConfig_E1_InReqTo5F         = "InReqTo5F"
+	//ElevatorRcsConfig_E1_OutReqCloseDoor5F = "OutReqCloseDoor5F"
+
 	// 自己发的是这4种信号
 	ElevatorRcsConfig_E1_InOpenInPlace5F  = "E1_InOpenInPlace5F"  // AGV在电梯外，请求打开5楼电梯进入
 	ElevatorRcsConfig_E1_OutOpenInPlace4F = "E1_OutOpenInPlace4F" // AGV在电梯内，请求打开4楼电梯出来

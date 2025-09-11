@@ -44,10 +44,10 @@ func WriteToElevator(c *gin.Context) {
 
 func writeToElevatorService(req WriteToElevatorDTO) error {
 	signalCoil := model.ElevatorSignalCoil{
-		Write1: req.Write1,
-		Write2: req.Write2,
-		Write3: req.Write3,
-		Write4: req.Write4,
+		ReqTo4F1:   req.Write1,
+		ReqTo5F2:   req.Write2,
+		OpenDoor3:  req.Write3,
+		CloseDoor4: req.Write4,
 	}
 	if err := utils.WriteElevatorCoils(req.DeviceID, signalCoil); err != nil {
 		log.Logger.Infof("deviceid = %v reset writeData error: %v", req.DeviceID, err)

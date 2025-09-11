@@ -48,13 +48,7 @@ func OneClickResetService(req oneClickReset) error {
 	}
 	if req.OnlyDeletePlcWrite == true {
 		// 清空电梯写入
-		signal := model.ElevatorSignalCoil{
-			Write1: 0,
-			Write2: 0,
-			Write3: 0,
-			Write4: 0,
-		}
-		if err := utils.WriteElevatorCoils(req.DeviceID, signal); err != nil {
+		if err := utils.WriteElevatorCoils(req.DeviceID, model.ElevatorSignalCoil{}); err != nil {
 			log.Logger.Infof("deviceid = %v reset writeData error: %v", req.DeviceID, err)
 			return err
 		}
@@ -64,13 +58,7 @@ func OneClickResetService(req oneClickReset) error {
 	delete(global.ElevatorTaskList, req.DeviceID)
 
 	// 清空电梯写入
-	signal := model.ElevatorSignalCoil{
-		Write1: 0,
-		Write2: 0,
-		Write3: 0,
-		Write4: 0,
-	}
-	if err := utils.WriteElevatorCoils(req.DeviceID, signal); err != nil {
+	if err := utils.WriteElevatorCoils(req.DeviceID, model.ElevatorSignalCoil{}); err != nil {
 		log.Logger.Infof("deviceid = %v reset writeData error: %v", req.DeviceID, err)
 		return err
 	}

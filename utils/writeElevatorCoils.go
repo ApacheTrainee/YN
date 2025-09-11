@@ -11,10 +11,10 @@ import (
 // 写入电梯的coil信号
 func WriteElevatorCoils(deviceId string, signal model.ElevatorSignalCoil) error {
 	coils := make([]int, 4)
-	coils[0] = signal.Write1
-	coils[1] = signal.Write2
-	coils[2] = signal.Write3
-	coils[3] = signal.Write4
+	coils[0] = signal.ReqTo4F1
+	coils[1] = signal.ReqTo5F2
+	coils[2] = signal.OpenDoor3
+	coils[3] = signal.CloseDoor4
 
 	log.WebLogger.Infof("deviceId: %v, preparing to write coils: %v", deviceId, coils)
 

@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 type SaveConfigFrontDTO struct {
@@ -39,8 +41,18 @@ func SaveConfigFront(c *gin.Context) {
 }
 
 func saveConfigFrontService(req SaveConfigFrontDTO) error {
+	// 获取可执行文件的绝对路径
+	exePath, err := os.Executable()
+	if err != nil {
+		log.WebLogger.Panicf("Failed to get executable path: %v", err)
+	}
+	exeDir := filepath.Dir(exePath) // 获取可执行文件所在目录
+
+	// 基于可执行文件目录构造配置文件的绝对路径
+	configFilePath := filepath.Join(exeDir, "config", "config.yaml")
+
 	v := viper.New()
-	v.SetConfigFile("config/config_front.yaml")
+	v.SetConfigFile(configFilePath)
 	v.Set("agv_points", req.AGVPoints)
 	v.Set("agv_numbers", req.AGVNumbers)
 	v.Set("map_config", req.MapConfig)
