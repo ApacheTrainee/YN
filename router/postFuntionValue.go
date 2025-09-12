@@ -167,48 +167,49 @@ func elevatorCloseDoorAndToTargetFloorProcess(deviceID string, signalType string
 
 	// () 跨楼层处理
 	if strings.Contains(signalType, "InReqTo") {
+		// 幂等处理
+		if elevatorTask.IsProcessToOtherFloorReq == true {
+			return nil
+		}
+
+		// 提取目标楼层信息
+		targetFloorStr := signalType[len(signalType)-2]
+		if targetFloorStr < '0' || targetFloorStr > '9' {
+			return fmt.Errorf("targetFloorStr = %v, not number", targetFloorStr)
+		}
+		targetFloor := float64(targetFloorStr - '0')
+
+		// 判断上楼还是下楼
+		taskType := global.ElevatorTaskType_Up
+		if elevatorTask.StartFloor-targetFloor > 0 {
+			taskType = global.ElevatorTaskType_Down
+		}
+
+		// 更新任务状态
+		// 下边的更新状态，把获取、更新，放在了一个锁内，相当于事务操作了，不会出现脏数据
+		elevatorTaskTmp1 := model.ElevatorTask{
+			IsProcessToOtherFloorReq: true,
+			TargetFloor:              targetFloor,
+			TaskType:                 taskType,
+		}
+		if err := dao.UpdateElevatorTask(deviceID, elevatorTaskTmp1, false); err != nil {
+			return fmt.Errorf("elevator task not found for elevatorID: %v, new-ElevatorTask: %+v. old-ElevatorTaskList: %+v", deviceID, elevatorTask, global.ElevatorTaskList[deviceID])
+		}
+
 		i := 0
-
 		for {
-			time.Sleep(1 * time.Second)
-
-			i = i + 1
-			if i == 120 {
-				return nil
-			}
-
-			elevatorTaskObj, _ := dao.GetElevatorTask(deviceID)
-			// 幂等处理
-			if elevatorTask.IsProcessToOtherFloorReq == true {
-				return nil
-			}
-			if elevatorTask.IsProcessStartFloorCloseDoorReq == false {
-				return nil
-			}
-
-			if elevatorTaskObj.TaskStatus != global.ElevatorTaskStatus_StartFloorCloseDoorFinish {
+			// 等到电梯关门，再写入去目标楼层
+			elevatorTask1, _ := dao.GetElevatorTask(deviceID)
+			if elevatorTask1.TaskStatus != global.ElevatorTaskStatus_StartFloorCloseDoorFinish {
 				continue
-			}
-
-			// 提取目标楼层信息
-			targetFloorStr := signalType[len(signalType)-2]
-			if targetFloorStr < '0' || targetFloorStr > '9' {
-				return fmt.Errorf("targetFloorStr = %v, not number", targetFloorStr)
-			}
-			targetFloor := float64(targetFloorStr - '0')
-
-			// 判断上楼还是下楼
-			taskType := global.ElevatorTaskType_Up
-			if elevatorTask.StartFloor-targetFloor > 0 {
-				taskType = global.ElevatorTaskType_Down
 			}
 
 			// 写入电梯去目标楼层
 			var signal model.ElevatorSignalCoil
-			if targetFloor == 4 {
+			if elevatorTask1.TargetFloor == 4 {
 				signal = model.ElevatorSignalCoil{ReqTo4F1: 1} // 写入电梯去4楼
 			}
-			if targetFloor == 5 {
+			if elevatorTask1.TargetFloor == 5 {
 				signal = model.ElevatorSignalCoil{ReqTo5F2: 1} // 写入电梯去5楼
 			}
 			if err := utils.WriteElevatorCoils(deviceID, signal); err != nil {
@@ -216,15 +217,18 @@ func elevatorCloseDoorAndToTargetFloorProcess(deviceID string, signalType string
 			}
 
 			// 更新任务状态
-			elevatorTaskTmp1 := model.ElevatorTask{
-				IsProcessToOtherFloorReq: true,
-				TargetFloor:              targetFloor,
-				TaskType:                 taskType,
-				TaskStatus:               global.ElevatorTaskStatus_ToTargetFloor,
+			elevatorTaskTmp2 := model.ElevatorTask{
+				TaskStatus: global.ElevatorTaskStatus_ToTargetFloor,
 			}
-			if err := dao.UpdateElevatorTask(deviceID, elevatorTaskTmp1, false); err != nil {
+			if err := dao.UpdateElevatorTask(deviceID, elevatorTaskTmp2, false); err != nil {
 				return fmt.Errorf("elevator task not found for elevatorID: %v, new-ElevatorTask: %+v. old-ElevatorTaskList: %+v", deviceID, elevatorTask, global.ElevatorTaskList[deviceID])
 			}
+
+			i = i + 1
+			if i == 120 {
+				return nil
+			}
+			time.Sleep(1 * time.Second)
 		}
 	}
 
