@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -23,4 +24,6 @@ func main() {
 		parentDir := filepath.Dir(currentDir)                      // 获取上一级目录
 		logOutputPath = filepath.Join(parentDir, "log", "logfile") // 定义日志输入路径
 	}
+
+	fmt.Printf("currentDir = %v", currentDir)
 }

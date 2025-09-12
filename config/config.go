@@ -28,15 +28,12 @@ type Device struct {
 }
 
 func InitConfig() {
-	// 获取可执行文件的绝对路径
-	exePath, err := os.Executable()
-	if err != nil {
-		log.Panicf("Failed to get executable path: %v", err)
+	currentDir, errPath := os.Getwd() // 获取当前目录
+	if errPath != nil {
+		panic("Failed to obtain the absolute path of the current directory" + errPath.Error())
 	}
-	exeDir := filepath.Dir(exePath) // 获取可执行文件所在目录
 
-	// 基于可执行文件目录构造配置文件的绝对路径
-	configFilePath := filepath.Join(exeDir, "config", "config.yaml")
+	configFilePath := filepath.Join(currentDir, "config", "config.yaml") // 定义日志输入路径
 
 	if _, err := os.Stat(configFilePath); errors.Is(err, os.ErrNotExist) {
 		log.Panicf("config file not exist: %s", configFilePath)

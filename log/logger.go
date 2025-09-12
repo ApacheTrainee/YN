@@ -78,17 +78,15 @@ func logSet(finalDirectory string) *logrus.Logger {
 		logrusLog.SetLevel(logrus.InfoLevel)
 	}
 
-	// 定义日志输出目录
-	// 使用可执行文件所在路径作为基准，构建绝对路径
-	exePath, err := os.Executable()
-	if err != nil {
-		panic("Failed to get executable path: " + err.Error())
+	// () 定义日志输出目录
+	currentDir, errPath := os.Getwd() // 获取当前目录
+	if errPath != nil {
+		panic("Failed to obtain the absolute path of the current directory" + errPath.Error())
 	}
-	exeDir := filepath.Dir(exePath) // 获取可执行文件所在目录
 
-	logOutputPath := filepath.Join(exeDir, "log", finalDirectory) // 使用绝对路径定义日志输出目录
+	logOutputPath := filepath.Join(currentDir, "log", finalDirectory) // 定义日志输入路径
 	if err := os.MkdirAll(logOutputPath, 0755); err != nil {
-		panic("Failed to create log directory: " + logOutputPath + " - " + err.Error())
+		panic("Failed to create log directory" + logOutputPath + err.Error())
 	}
 
 	// () 配置Hook：额外输出错误日志
