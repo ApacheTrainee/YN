@@ -178,16 +178,16 @@ func elevatorCloseDoorAndToTargetFloorProcess(deviceID string, signalType string
 			}
 
 			elevatorTaskObj, _ := dao.GetElevatorTask(deviceID)
-			if elevatorTaskObj.TaskStatus != global.ElevatorTaskStatus_StartFloorCloseDoorFinish {
-				continue
-			}
-
 			// 幂等处理
 			if elevatorTask.IsProcessToOtherFloorReq == true {
 				return nil
 			}
 			if elevatorTask.IsProcessStartFloorCloseDoorReq == false {
 				return nil
+			}
+
+			if elevatorTaskObj.TaskStatus != global.ElevatorTaskStatus_StartFloorCloseDoorFinish {
+				continue
 			}
 
 			// 提取目标楼层信息

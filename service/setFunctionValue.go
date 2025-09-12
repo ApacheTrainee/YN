@@ -130,7 +130,7 @@ func elevatorTaskStatusForStartFloorArriveFinishProcess(elevatorTask model.Eleva
 						return fmt.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 					}
 				} else {
-					log.Logger.Infof("send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace5F)
+					log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace5F)
 				}
 
 				elevatorTaskObj = model.ElevatorTask{TaskStatus: global.ElevatorTaskStatus_StartFloorOpenDoorFinish, ReqStatus: global.ElevatorRcsConfig_E1_InOpenInPlace5F}
@@ -142,7 +142,7 @@ func elevatorTaskStatusForStartFloorArriveFinishProcess(elevatorTask model.Eleva
 						return fmt.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 					}
 				} else {
-					log.Logger.Infof("send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace4F)
+					log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace4F)
 				}
 
 				elevatorTaskObj = model.ElevatorTask{TaskStatus: global.ElevatorTaskStatus_StartFloorOpenDoorFinish, ReqStatus: global.ElevatorRcsConfig_E1_InOpenInPlace4F}
@@ -202,7 +202,7 @@ func elevatorTaskStatusForTargetFloorArriveFinishProcess(elevatorTask model.Elev
 						return fmt.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 					}
 				} else {
-					log.Logger.Infof("send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace5F)
+					log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace5F)
 				}
 
 				elevatorTaskObj = model.ElevatorTask{TaskStatus: global.ElevatorTaskStatus_TargetFloorOpenDoorFinish, ReqStatus: global.ElevatorRcsConfig_E1_OutOpenInPlace5F}
@@ -214,7 +214,7 @@ func elevatorTaskStatusForTargetFloorArriveFinishProcess(elevatorTask model.Elev
 						return fmt.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 					}
 				} else {
-					log.Logger.Infof("send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace4F)
+					log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace4F)
 				}
 
 				elevatorTaskObj = model.ElevatorTask{TaskStatus: global.ElevatorTaskStatus_TargetFloorOpenDoorFinish, ReqStatus: global.ElevatorRcsConfig_E1_OutOpenInPlace4F}
