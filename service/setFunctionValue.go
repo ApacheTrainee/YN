@@ -26,15 +26,22 @@ func processElevatorSignal(device config.Device) {
 	}
 
 	// 电梯当前在哪楼
-	var currentFloor float64 = 5
+	// 跨楼层时，哪层都不在，都是0
+	var currentFloor float64 = 0
+	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[3] == 1 {
+		currentFloor = 5 // 在四楼
+	}
 	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[2] == 1 {
 		currentFloor = 4 // 在四楼
 	}
 
-	// 电梯当前开门还是关门
-	currentDoorStatus := false // 关门【默认】
+	// 电梯当前开门还是关门。用bool类型不行，因为开关中都是0，会造成默认是关门的
+	var currentDoorStatus string
 	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[0] == 1 {
-		currentDoorStatus = true
+		currentDoorStatus = "open"
+	}
+	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[1] == 1 {
+		currentDoorStatus = "close"
 	}
 
 	// 根据任务状态做判断
@@ -65,10 +72,10 @@ func processElevatorSignal(device config.Device) {
 	}
 }
 
-func elevatorTaskStatusForToStartFloorProcess(elevatorTask model.ElevatorTask, currentDoorStatus bool, currentFloor float64, device config.Device) error {
+func elevatorTaskStatusForToStartFloorProcess(elevatorTask model.ElevatorTask, currentDoorStatus string, currentFloor float64, device config.Device) error {
 	if elevatorTask.TaskStatus == global.ElevatorTaskStatus_ToStartFloor {
 		if elevatorTask.StartFloor != currentFloor {
-			if currentDoorStatus == false { // 如果是关着门的
+			if currentDoorStatus == "close" { // 如果是关着门的
 				if elevatorTask.StartFloor == 5 {
 					// 写入电梯到5楼
 					if err := utils.WriteElevatorCoils(device.Id, model.ElevatorSignalCoil{ReqTo5F2: 1}); err != nil {
@@ -90,7 +97,7 @@ func elevatorTaskStatusForToStartFloorProcess(elevatorTask model.ElevatorTask, c
 		// 在当前楼层的处理
 		if elevatorTask.StartFloor == currentFloor {
 			// 门关着的，就打开
-			if currentDoorStatus == false {
+			if currentDoorStatus == "close" {
 				// 写入电梯开门
 				if err := utils.WriteElevatorCoils(elevatorTask.ElevatorID, model.ElevatorSignalCoil{OpenDoor3: 1}); err != nil {
 					return fmt.Errorf("deviceid = %v reset writeData error: %v", elevatorTask.ElevatorID, err)
@@ -110,12 +117,12 @@ func elevatorTaskStatusForToStartFloorProcess(elevatorTask model.ElevatorTask, c
 	return nil
 }
 
-func elevatorTaskStatusForStartFloorArriveFinishProcess(elevatorTask model.ElevatorTask, currentDoorStatus bool, currentFloor float64, device config.Device) error {
+func elevatorTaskStatusForStartFloorArriveFinishProcess(elevatorTask model.ElevatorTask, currentDoorStatus string, currentFloor float64, device config.Device) error {
 	//
 	if elevatorTask.TaskStatus == global.ElevatorTaskStatus_StartFloorArriveFinish {
 		var elevatorTaskObj model.ElevatorTask
 
-		if currentDoorStatus == true { // 如果开门到位
+		if currentDoorStatus == "open" { // 如果开门到位
 			if currentFloor == 5 {
 				if config.Config.RunMode == "pro" {
 					// 发送RCS
@@ -151,9 +158,9 @@ func elevatorTaskStatusForStartFloorArriveFinishProcess(elevatorTask model.Eleva
 	return nil
 }
 
-func elevatorTaskStatusForStartFloorCloseDoorProcess(elevatorTask model.ElevatorTask, currentDoorStatus bool, currentFloor float64, device config.Device) error {
+func elevatorTaskStatusForStartFloorCloseDoorProcess(elevatorTask model.ElevatorTask, currentDoorStatus string, currentFloor float64, device config.Device) error {
 	if elevatorTask.TaskStatus == global.ElevatorTaskStatus_StartFloorCloseDoor {
-		if currentDoorStatus == false {
+		if currentDoorStatus == "close" {
 			// 更新任务状态
 			elevatorTaskObj := model.ElevatorTask{TaskStatus: global.ElevatorTaskStatus_StartFloorCloseDoorFinish}
 			if err := dao.UpdateElevatorTask(elevatorTask.ElevatorID, elevatorTaskObj, false); err != nil {
@@ -165,9 +172,9 @@ func elevatorTaskStatusForStartFloorCloseDoorProcess(elevatorTask model.Elevator
 	return nil
 }
 
-func elevatorTaskStatusForToTargetFloorProcess(elevatorTask model.ElevatorTask, currentDoorStatus bool, currentFloor float64, device config.Device) error {
+func elevatorTaskStatusForToTargetFloorProcess(elevatorTask model.ElevatorTask, currentDoorStatus string, currentFloor float64, device config.Device) error {
 	if elevatorTask.TaskStatus == global.ElevatorTaskStatus_ToTargetFloor {
-		if currentDoorStatus == false {
+		if currentDoorStatus == "close" && elevatorTask.TargetFloor == currentFloor {
 			// 写入电梯常开门
 			if err := utils.WriteElevatorCoils(elevatorTask.ElevatorID, model.ElevatorSignalCoil{OpenDoor3: 1}); err != nil {
 				return fmt.Errorf("deviceid = %v reset writeData error: %v", elevatorTask.ElevatorID, err)
@@ -184,9 +191,9 @@ func elevatorTaskStatusForToTargetFloorProcess(elevatorTask model.ElevatorTask, 
 	return nil
 }
 
-func elevatorTaskStatusForTargetFloorArriveFinishProcess(elevatorTask model.ElevatorTask, currentDoorStatus bool, currentFloor float64, device config.Device) error {
+func elevatorTaskStatusForTargetFloorArriveFinishProcess(elevatorTask model.ElevatorTask, currentDoorStatus string, currentFloor float64, device config.Device) error {
 	if elevatorTask.TaskStatus == global.ElevatorTaskStatus_TargetFloorArriveFinish {
-		if currentDoorStatus == true {
+		if currentDoorStatus == "open" && elevatorTask.TargetFloor == currentFloor {
 			var elevatorTaskObj model.ElevatorTask
 			if currentFloor == 5 {
 				if config.Config.RunMode == "pro" {
@@ -223,9 +230,9 @@ func elevatorTaskStatusForTargetFloorArriveFinishProcess(elevatorTask model.Elev
 	return nil
 }
 
-func elevatorTaskStatusForTargetFloorCloseDoorProcess(elevatorTask model.ElevatorTask, currentDoorStatus bool, currentFloor float64, device config.Device) error {
+func elevatorTaskStatusForTargetFloorCloseDoorProcess(elevatorTask model.ElevatorTask, currentDoorStatus string, currentFloor float64, device config.Device) error {
 	if elevatorTask.TaskStatus == global.ElevatorTaskStatus_TargetFloorCloseDoor {
-		if currentDoorStatus == false {
+		if currentDoorStatus == "close" && elevatorTask.TargetFloor == currentFloor {
 			// 清空电梯写入
 			if err := utils.WriteElevatorCoils(elevatorTask.ElevatorID, model.ElevatorSignalCoil{}); err != nil {
 				return fmt.Errorf("deviceid = %v reset writeData error: %v", elevatorTask.ElevatorID, err)
