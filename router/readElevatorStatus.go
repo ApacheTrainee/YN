@@ -24,7 +24,6 @@ func ReadElevatorStatus(c *gin.Context) {
 		})
 		return
 	}
-	log.WebLogger.Infof("\n%v \n%+v", c.Request.URL.Path, req.ReqCode)
 
 	inputResult, coilResult, err := readElevatorStatusService(req)
 	if err != nil {
