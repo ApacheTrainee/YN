@@ -1,9 +1,8 @@
 package main
 
 import (
+	"YN/model"
 	"fmt"
-	"os"
-	"path/filepath"
 )
 
 type a struct {
@@ -11,19 +10,15 @@ type a struct {
 }
 
 func main() {
-	// 定义日志输入路径
-	currentDir, errPath := os.Getwd() // 获取当前目录
-	if errPath != nil {
-		panic("Failed to obtain the absolute path of the current directory" + errPath.Error())
+	signal := model.ElevatorSignalCoil{}
+
+	coils := make([]int, 4)
+	coils[0] = signal.ReqTo4F1
+	coils[1] = signal.ReqTo5F2
+	coils[2] = signal.OpenDoor3
+	coils[3] = signal.CloseDoor4
+
+	if coils[0] == 0 && coils[1] == 0 && coils[2] == 0 && coils[3] == 0 {
+		fmt.Printf("=== %v", len(coils))
 	}
-
-	var logOutputPath string
-	logOutputPath = filepath.Join(currentDir, "log", "logfile") // 定义日志输入路径
-
-	if _, err := os.Stat(logOutputPath); os.IsNotExist(err) {
-		parentDir := filepath.Dir(currentDir)                      // 获取上一级目录
-		logOutputPath = filepath.Join(parentDir, "log", "logfile") // 定义日志输入路径
-	}
-
-	fmt.Printf("currentDir = %v", currentDir)
 }

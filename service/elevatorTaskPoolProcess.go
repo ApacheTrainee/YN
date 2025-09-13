@@ -23,6 +23,8 @@ func ElevatorTaskPoolProcess() {
 			elevatorTaskPoolProcessImp(device.Id)
 		}(device)
 	}
+
+	wg.Wait()
 }
 
 func elevatorTaskPoolProcessImp(deviceID string) {

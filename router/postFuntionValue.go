@@ -198,6 +198,12 @@ func elevatorCloseDoorAndToTargetFloorProcess(deviceID string, signalType string
 
 		i := 0
 		for {
+			i = i + 1
+			if i == 120 {
+				return nil
+			}
+			time.Sleep(1 * time.Second)
+
 			// 等到电梯关门，再写入去目标楼层
 			elevatorTask1, _ := dao.GetElevatorTask(deviceID)
 			if elevatorTask1.TaskStatus != global.ElevatorTaskStatus_StartFloorCloseDoorFinish {
@@ -224,11 +230,7 @@ func elevatorCloseDoorAndToTargetFloorProcess(deviceID string, signalType string
 				return fmt.Errorf("elevator task not found for elevatorID: %v, new-ElevatorTask: %+v. old-ElevatorTaskList: %+v", deviceID, elevatorTask, global.ElevatorTaskList[deviceID])
 			}
 
-			i = i + 1
-			if i == 120 {
-				return nil
-			}
-			time.Sleep(1 * time.Second)
+			return nil
 		}
 	}
 
@@ -255,6 +257,7 @@ func elevatorCloseDoorAndToTargetFloorProcess(deviceID string, signalType string
 
 			// 删除任务
 			dao.DeleteElevatorTask(elevatorTask.ElevatorID)
+			log.WebLogger.Infof("---------------------------------------------------------------------------------\n\n")
 		}
 	}
 

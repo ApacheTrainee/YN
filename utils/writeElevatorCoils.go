@@ -35,6 +35,9 @@ func WriteElevatorCoils(deviceId string, signal model.ElevatorSignalCoil) error 
 		return fmt.Errorf("failed to write coils to device = %v err: %v", deviceId, err)
 	}
 	log.WebLogger.Infof("write to device %v Successfully\n", deviceId)
+	if coils[0] == 0 && coils[1] == 0 && coils[2] == 0 && coils[3] == 0 {
+		log.WebLogger.Infof("---------------------------------------------------------------------------------\n\n")
+	}
 
 	return nil
 }

@@ -38,7 +38,8 @@ func DeleteElevatorTask(elevatorID string) {
 	defer global.TaskLock.Unlock()
 
 	delete(global.ElevatorTaskList, elevatorID)
-	log.Logger.Infof("delete ElevatorTaskList: %+v\n", elevatorID)
+	log.Logger.Infof("delete ElevatorTaskList: %+v", elevatorID)
+	log.Logger.Infof("---------------------------------------------------------------------------------\n\n")
 }
 
 func UpdateElevatorTask(elevatorID string, elevatorTask model.ElevatorTask, isFinish bool) error {
