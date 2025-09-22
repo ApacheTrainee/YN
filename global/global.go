@@ -3,15 +3,10 @@ package global
 import (
 	"YN/model"
 	"github.com/goburrow/modbus"
-	"sync"
 )
 
 var (
-	TaskLock         sync.RWMutex
-	TaskPoolLock     sync.RWMutex
-	ElevatorTaskPool = make(map[string][]model.ElevatorTask)
-	ElevatorTaskList = make(map[string]model.ElevatorTask) //各个电梯的任务列表
-
+	ElevatorTask   model.ElevatorTask
 	ElevatorStatus = make(map[string]int)           // 读取(叫串口)的电梯状态值
 	ClientList     = make(map[string]modbus.Client) // 电梯客户端
 
@@ -21,25 +16,20 @@ var (
 	RasterExclusiveAreaChan2 = make(chan bool, 1)
 	RasterExclusiveArea1     = false
 	RasterExclusiveArea2     = false
+
+	StartFloorProcessChan = make(chan float64, 2)
 )
 
 var (
-	// 电梯任务类型
-	ElevatorTaskType_Down = "Down"
-	ElevatorTaskType_Up   = "Up"
+	OpenDoor  = "OpenDoor"
+	CloseDoor = "CloseDoor"
 
 	// 电梯任务状态流转
-	ElevatorTaskStatus_ToStartFloor              = "ToStartFloor"
-	ElevatorTaskStatus_StartFloorArriveFinish    = "StartFloorArriveFinish" // 因为生成任务那里要判断是否在当前楼层，所以多2个引用
-	ElevatorTaskStatus_StartFloorOpenDoorFinish  = "StartFloorOpenDoorFinish"
-	ElevatorTaskStatus_StartFloorCloseDoor       = "StartFloorCloseDoor"
-	ElevatorTaskStatus_StartFloorCloseDoorFinish = "StartFloorCloseDoorFinish"
+	ElevatorTaskStatus_ToStartFloor           = "ToStartFloor"
+	ElevatorTaskStatus_StartFloorArriveFinish = "StartFloorArriveFinish"
 
-	ElevatorTaskStatus_ToTargetFloor              = "ToTargetFloor"
-	ElevatorTaskStatus_TargetFloorArriveFinish    = "TargetFloorArriveFinish"
-	ElevatorTaskStatus_TargetFloorOpenDoorFinish  = "TargetFloorOpenDoorFinish"
-	ElevatorTaskStatus_TargetFloorCloseDoor       = "TargetFloorCloseDoor"       // 22、26各多两个判断。共多4个
-	ElevatorTaskStatus_TargetFloorCloseDoorFinish = "TargetFloorCloseDoorFinish" // 多两个仅更新状态的引用
+	ElevatorTaskStatus_ToTargetFloor           = "ToTargetFloor"
+	ElevatorTaskStatus_TargetFloorArriveFinish = "TargetFloorArriveFinish"
 
 	/*
 		web接收的是这8种信号

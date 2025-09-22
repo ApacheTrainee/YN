@@ -1,24 +1,15 @@
 package main
 
 import (
-	"YN/model"
 	"fmt"
+	"slices" // 需要导入 slices 包
 )
 
-type a struct {
-	Age string
-}
-
 func main() {
-	signal := model.ElevatorSignalCoil{}
+	slice1 := []int{1, 2, 3}
+	slice2 := []int{1, 2, 3}
+	slice3 := []int{1, 2, 4}
 
-	coils := make([]int, 4)
-	coils[0] = signal.ReqTo4F1
-	coils[1] = signal.ReqTo5F2
-	coils[2] = signal.OpenDoor3
-	coils[3] = signal.CloseDoor4
-
-	if coils[0] == 0 && coils[1] == 0 && coils[2] == 0 && coils[3] == 0 {
-		fmt.Printf("=== %v", len(coils))
-	}
+	fmt.Println("slice1 == slice2:", slices.Equal(slice1, slice2)) // true
+	fmt.Println("slice1 == slice3:", slices.Equal(slice1, slice3)) // false
 }

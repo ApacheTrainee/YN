@@ -16,6 +16,7 @@ func main() {
 	go service.StartEquipmentMonitor()      // 读取电梯状态，做逻辑处理
 	go service.RasterExclusiveAreaProcess() // 光栅对接
 	go service.ElevatorTaskPoolProcess()    // 电梯任务池
+	go service.ElevatorTaskTimeOutProcess() // 电梯任务超时处理
 
 	r := gin.Default()
 	r.Use(router.Core) // 跨域问题【必须放在url前执行，否则不生效】

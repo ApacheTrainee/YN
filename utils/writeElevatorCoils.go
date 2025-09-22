@@ -3,18 +3,31 @@ package utils
 import (
 	"YN/global"
 	"YN/log"
-	"YN/model"
 	"fmt"
+	"slices"
 	"strconv"
 )
 
 // 写入电梯的coil信号
-func WriteElevatorCoils(deviceId string, signal model.ElevatorSignalCoil) error {
+func WriteElevatorCoils(deviceId string, toFloor float64, doorStatus string) error {
 	coils := make([]int, 4)
-	coils[0] = signal.ReqTo4F1
-	coils[1] = signal.ReqTo5F2
-	coils[2] = signal.OpenDoor3
-	coils[3] = signal.CloseDoor4
+	coils[0] = 0
+	coils[1] = 0
+	coils[2] = 0
+	coils[3] = 0
+
+	if toFloor == 4 {
+		coils[0] = 1
+	}
+	if toFloor == 5 {
+		coils[1] = 1
+	}
+	if doorStatus == global.OpenDoor {
+		coils[2] = 1
+	}
+	if doorStatus == global.CloseDoor {
+		coils[3] = 1
+	}
 
 	log.WebLogger.Infof("deviceId: %v, preparing to write coils: %v", deviceId, coils)
 
@@ -22,6 +35,16 @@ func WriteElevatorCoils(deviceId string, signal model.ElevatorSignalCoil) error 
 	coilsBytes, err := intSliceToOneByteSlice(coils)
 	if err != nil {
 		return fmt.Errorf("boolSliceToByteSlice err: %v", err)
+	}
+
+	// 如果一样，就不重复写入了
+	coilsResults, err := global.ClientList[deviceId].ReadCoils(0, 4)
+	if err != nil {
+		return fmt.Errorf("ReadCoils err: %v", err)
+	}
+	if slices.Equal(coilsResults, coilsBytes) {
+		log.WebLogger.Infof("elevator write num repeat: %v", coils)
+		return nil
 	}
 
 	// 写入电梯信号
@@ -34,10 +57,8 @@ func WriteElevatorCoils(deviceId string, signal model.ElevatorSignalCoil) error 
 	if err != nil {
 		return fmt.Errorf("failed to write coils to device = %v err: %v", deviceId, err)
 	}
+
 	log.WebLogger.Infof("write to device %v Successfully\n", deviceId)
-	if coils[0] == 0 && coils[1] == 0 && coils[2] == 0 && coils[3] == 0 {
-		log.WebLogger.Infof("---------------------------------------------------------------------------------\n\n")
-	}
 
 	return nil
 }

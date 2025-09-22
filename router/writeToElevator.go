@@ -1,8 +1,8 @@
 package router
 
 import (
+	"YN/global"
 	"YN/log"
-	"YN/model"
 	"YN/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -43,13 +43,23 @@ func WriteToElevator(c *gin.Context) {
 }
 
 func writeToElevatorService(req WriteToElevatorDTO) error {
-	signalCoil := model.ElevatorSignalCoil{
-		ReqTo4F1:   req.Write1,
-		ReqTo5F2:   req.Write2,
-		OpenDoor3:  req.Write3,
-		CloseDoor4: req.Write4,
+	var toFloor float64
+	if req.Write1 == 1 {
+		toFloor = 4
 	}
-	if err := utils.WriteElevatorCoils(req.DeviceID, signalCoil); err != nil {
+	if req.Write2 == 1 {
+		toFloor = 5
+	}
+
+	var doorStatus string
+	if req.Write3 == 1 {
+		doorStatus = global.OpenDoor
+	}
+	if req.Write4 == 1 {
+		doorStatus = global.CloseDoor
+	}
+
+	if err := utils.WriteElevatorCoils(req.DeviceID, toFloor, doorStatus); err != nil {
 		log.Logger.Infof("deviceid = %v reset writeData error: %v", req.DeviceID, err)
 		return err
 	}

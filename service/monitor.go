@@ -63,17 +63,25 @@ func equipmentStatusMonitor(device config.Device) {
 	// 循环读取状态，根据是否变化，处理电梯信号
 	for {
 		// 只读：modsim32 for opto22的input status
-		var result []byte
-		if config.Config.RunMode == "test" {
-			result = global.ElevatorCoilSimulation
-		} else {
-			result1, err := global.ClientList[device.Id].ReadDiscreteInputs(config.Config.ReadStartAddr, config.Config.ReadEndAddr)
-			if err != nil {
-				log.Logger.Infof("ReadDiscreteInputs err: %v", err)
-				time.Sleep(3 * time.Second)
-				continue
-			}
-			result = result1
+		//var result []byte
+		//if config.Config.RunMode == "test" {
+		//	result = global.ElevatorCoilSimulation
+		//} else {
+		//	result1, err := global.ClientList[device.Id].ReadDiscreteInputs(config.Config.ReadStartAddr, config.Config.ReadEndAddr)
+		//	if err != nil {
+		//		log.Logger.Errorf("ReadDiscreteInputs err: %v", err)
+		//		time.Sleep(3 * time.Second)
+		//		continue
+		//	}
+		//
+		//	result = result1
+		//}
+
+		result, err := global.ClientList[device.Id].ReadDiscreteInputs(config.Config.ReadStartAddr, config.Config.ReadEndAddr)
+		if err != nil {
+			log.Logger.Errorf("ReadDiscreteInputs err: %v", err)
+			time.Sleep(3 * time.Second)
+			continue
 		}
 
 		if result[0] != preResult[0] {
