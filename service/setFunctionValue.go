@@ -20,19 +20,19 @@ func processElevatorSignal(device config.Device) {
 	// 电梯当前在哪楼
 	// 跨楼层时，哪层都不在，都是0
 	var currentFloor float64 = 0
-	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[3] == 1 {
-		currentFloor = 5 // 在四楼
-	}
-	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[2] == 1 {
+	if bits[2] == 1 {
 		currentFloor = 4 // 在四楼
+	}
+	if bits[3] == 1 {
+		currentFloor = 5 // 在四楼
 	}
 
 	// 电梯当前开门还是关门。用bool类型不行，因为开关中都是0，会造成默认是关门的
 	currentDoorStatus := ""
-	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[0] == 1 {
+	if bits[0] == 1 {
 		currentDoorStatus = global.OpenDoor
 	}
-	if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])}); bits[1] == 1 {
+	if bits[1] == 1 {
 		currentDoorStatus = global.CloseDoor
 	}
 
@@ -70,7 +70,7 @@ func processElevatorSignal(device config.Device) {
 					log.Logger.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 				}
 			} else {
-				log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace5F)
+				log.Logger.Infof("----4-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace5F)
 			}
 		}
 
@@ -84,7 +84,7 @@ func processElevatorSignal(device config.Device) {
 					log.Logger.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 				}
 			} else {
-				log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace5F)
+				log.Logger.Infof("----3-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace5F)
 			}
 		}
 	}
@@ -123,7 +123,7 @@ func processElevatorSignal(device config.Device) {
 					log.Logger.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 				}
 			} else {
-				log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace4F)
+				log.Logger.Infof("----1-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_InOpenInPlace4F)
 			}
 		}
 
@@ -137,7 +137,7 @@ func processElevatorSignal(device config.Device) {
 					log.Logger.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
 				}
 			} else {
-				log.Logger.Infof("----6666-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace4F)
+				log.Logger.Infof("----2-----send to RCS: request body is %v", global.ElevatorRcsConfig_E1_OutOpenInPlace4F)
 			}
 		}
 	}
