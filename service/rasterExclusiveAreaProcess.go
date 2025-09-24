@@ -15,10 +15,11 @@ func RasterExclusiveAreaProcess() {
 
 			// 开始进入独占区触发
 			if boolInfo == true {
-				//// 先发请求给all part关闭光栅
-				//if err := utils.SendAllPartRaster("5M01", 1); err != nil {
-				//	log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea1 err: %v", err)
-				//}
+				// 先发请求给all part关闭光栅
+				if err := utils.SendAllPartRaster("5M01", 1); err != nil {
+					log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea1 err: %v", err)
+					continue
+				}
 
 				// 后发请求给RCS
 				if err := utils.SendRCS("5M01", true); err != nil {
@@ -27,10 +28,11 @@ func RasterExclusiveAreaProcess() {
 				}
 				log.WebLogger.Infof("AGV已经====进入====独占区1: 5M01")
 			} else { // 离开完独占区后触发
-				//// 发请求给all part开启光栅
-				//if err := utils.SendAllPartRaster("5M01", 2); err != nil {
-				//	log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea1 err: %v", err)
-				//}
+				// 发请求给all part开启光栅
+				if err := utils.SendAllPartRaster("5M01", 2); err != nil {
+					log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea1 err: %v", err)
+					continue
+				}
 
 				log.WebLogger.Infof("AGV已经====离开====独占区1: 5M01")
 			}
@@ -47,10 +49,11 @@ func RasterExclusiveAreaProcess() {
 
 			// 开始进入独占区触发
 			if boolInfo == true {
-				//// 先发请求给all part关闭光栅
-				//if err := utils.SendAllPartRaster("5M02", 1); err != nil {
-				//	log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea2 err: %v", err)
-				//}
+				// 先发请求给all part关闭光栅
+				if err := utils.SendAllPartRaster("5M02", 1); err != nil {
+					log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea2 err: %v", err)
+					continue
+				}
 
 				if err := utils.SendRCS("5M02", true); err != nil {
 					log.WebLogger.Errorf("SendRCS RasterExclusiveArea2 err: %v", err)
@@ -59,9 +62,10 @@ func RasterExclusiveAreaProcess() {
 				log.WebLogger.Infof("AGV已经====进入====独占区2: 5M02")
 			} else { // 离开完独占区后触发
 				//// 先发请求给all part关闭光栅
-				//if err := utils.SendAllPartRaster("5M02", 2); err != nil {
-				//	log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea2 err: %v", err)
-				//}
+				if err := utils.SendAllPartRaster("5M02", 2); err != nil {
+					log.WebLogger.Errorf("SendAllPartRaster RasterExclusiveArea2 err: %v", err)
+					continue
+				}
 
 				log.WebLogger.Infof("AGV已经====离开====独占区2: 5M02")
 			}
