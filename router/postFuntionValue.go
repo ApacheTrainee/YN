@@ -77,6 +77,13 @@ func processRCSRequest(req fieldFunctionDTO) error {
 		global.ElevatorTask.StartTime = time.Now()
 
 		global.StartFloorProcessChan <- startFloor
+		for result := range global.StartFloorProcessChanResult {
+			if result == "ok" {
+				return nil
+			} else {
+				return fmt.Errorf("startFloor = %v, error: %v", startFloor, result)
+			}
+		}
 	}
 
 	// () AGV进入电梯后，起始楼层关门处理
@@ -145,7 +152,7 @@ func safetyCheck(req fieldFunctionDTO, deviceID string) error {
 
 	// 校验：读取电梯的值是否正确
 	bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[deviceID])})
-	if (bits[0] == 0 && bits[1] == 0 && bits[2] == 0 && bits[3] == 0) || bits[4] == 0 || bits[5] == 1 {
+	if (bits[0] == 0 && bits[1] == 0 && bits[2] == 0 && bits[3] == 0) || (bits[0] == 1 && bits[1] == 1 && bits[2] == 1 && bits[3] == 1) || bits[4] == 0 || bits[5] == 1 {
 		return fmt.Errorf("elevator err. bits: %v", bits)
 	}
 

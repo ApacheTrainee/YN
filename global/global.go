@@ -17,7 +17,8 @@ var (
 	RasterExclusiveArea1     = false
 	RasterExclusiveArea2     = false
 
-	StartFloorProcessChan = make(chan float64, 2)
+	StartFloorProcessChan       = make(chan float64, 2)
+	StartFloorProcessChanResult = make(chan string, 2)
 )
 
 var (

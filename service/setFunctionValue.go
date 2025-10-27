@@ -12,7 +12,7 @@ import (
 func processElevatorSignal(device config.Device) {
 	// 校验：读取电梯的值是否正确
 	bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[device.Id])})
-	if (bits[0] == 0 && bits[1] == 0 && bits[2] == 0 && bits[3] == 0) || bits[4] == 0 || bits[5] == 1 {
+	if (bits[0] == 0 && bits[1] == 0 && bits[2] == 0 && bits[3] == 0) || (bits[0] == 1 && bits[1] == 1 && bits[2] == 1 && bits[3] == 1) || bits[4] == 0 || bits[5] == 1 {
 		log.Logger.Errorf("elevator err. bits: %v", bits)
 		return
 	}

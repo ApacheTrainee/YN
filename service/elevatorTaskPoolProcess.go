@@ -5,6 +5,8 @@ import (
 	"YN/global"
 	"YN/log"
 	"YN/utils"
+	"fmt"
+	"time"
 )
 
 func ElevatorTaskPoolProcess() {
@@ -28,6 +30,7 @@ func elevatorTaskPoolProcessImp(deviceID string) {
 		}
 		if currentFloor == 0 {
 			log.Logger.Errorf("elevatorTaskPoolProcessImp, currentFloor = %v, deviceID: %v", currentFloor, deviceID)
+			global.StartFloorProcessChanResult <- "ng"
 			continue
 		}
 
@@ -39,9 +42,15 @@ func elevatorTaskPoolProcessImp(deviceID string) {
 		if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[deviceID])}); bits[1] == 1 {
 			currentDoorStatus = global.CloseDoor
 		}
-		if currentDoorStatus == "" {
-			log.Logger.Errorf("elevatorTaskPoolProcessImp, currentDoorStatus = %v, deviceID: %v", currentDoorStatus, deviceID)
-			continue
+		if currentDoorStatus == "" { // 有可能门正好处于关门中
+			doorStatus, err := readDoorStatus(deviceID, currentDoorStatus) // 给10秒时间重复读取状态
+			if err != nil {
+				log.Logger.Errorf("elevatorTaskPoolProcessImp, readDoorStatus error: %v, deviceID: %v", err, deviceID)
+				global.StartFloorProcessChanResult <- "ng"
+				continue
+			}
+
+			currentDoorStatus = doorStatus
 		}
 
 		// 电梯在其他楼层
@@ -49,6 +58,7 @@ func elevatorTaskPoolProcessImp(deviceID string) {
 			// 写入到起始楼层 和 电梯关门
 			if err := utils.WriteElevatorCoils(deviceID, startFloor, global.CloseDoor); err != nil {
 				log.Logger.Errorf("elevator = %v writeData error: %v", deviceID, err)
+				global.StartFloorProcessChanResult <- "ng"
 				continue
 			}
 		}
@@ -59,6 +69,7 @@ func elevatorTaskPoolProcessImp(deviceID string) {
 				// 写入电梯常开门
 				if err := utils.WriteElevatorCoils(deviceID, 0, global.OpenDoor); err != nil {
 					log.Logger.Errorf("deviceid = %v reset writeData error: %v", deviceID, err)
+					global.StartFloorProcessChanResult <- "ng"
 					continue
 				}
 
@@ -73,6 +84,7 @@ func elevatorTaskPoolProcessImp(deviceID string) {
 						// 发送RCS
 						if err := utils.SendRCS(global.ElevatorRcsConfig_E1_InOpenInPlace5F, true); err != nil {
 							log.Logger.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
+							global.StartFloorProcessChanResult <- "ng"
 							continue
 						}
 					} else {
@@ -87,6 +99,7 @@ func elevatorTaskPoolProcessImp(deviceID string) {
 						// 发送RCS
 						if err := utils.SendRCS(global.ElevatorRcsConfig_E1_InOpenInPlace4F, true); err != nil {
 							log.Logger.Errorf("SendRCS updateRCSFieldFunction err: %v", err)
+							global.StartFloorProcessChanResult <- "ng"
 							continue
 						}
 					} else {
@@ -94,6 +107,31 @@ func elevatorTaskPoolProcessImp(deviceID string) {
 					}
 				}
 			}
+		}
+
+		global.StartFloorProcessChanResult <- "ok"
+	}
+}
+
+func readDoorStatus(deviceID string, currentDoorStatus string) (string, error) {
+	i := 0
+	for {
+		if i >= 10 {
+			return "", fmt.Errorf("10秒内，电梯未读取到门状态")
+		}
+		time.Sleep(1 * time.Second)
+		i = i + 1
+
+		if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[deviceID])}); bits[0] == 1 {
+			currentDoorStatus = global.OpenDoor
+		}
+		if bits := utils.BytesToBits([]byte{byte(global.ElevatorStatus[deviceID])}); bits[1] == 1 {
+			currentDoorStatus = global.CloseDoor
+		}
+		log.Logger.Infof("读取电梯状态为 %v", currentDoorStatus)
+
+		if currentDoorStatus != "" {
+			return currentDoorStatus, nil
 		}
 	}
 }
